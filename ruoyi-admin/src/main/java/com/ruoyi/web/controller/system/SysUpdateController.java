@@ -17,36 +17,85 @@ public class SysUpdateController {
     @PostMapping("/update")
     public AjaxResult executeUpdate() {
         try {
-            // 获取项目根目录
-            String projectRoot = System.getProperty("user.dir");
-            java.io.File updateScript = new java.io.File(projectRoot, "update.bat");
+            // 获取项目根目录 - 确保是正确的工作目录
+            String userDir = System.getProperty("user.dir");
+            String projectRoot = userDir;
             
-            if (!updateScript.exists()) {
-                return AjaxResult.error("更新脚本不存在：" + updateScript.getAbsolutePath());
+            // 如果当前目录是ruoyi-admin，需要回到上级目录
+            if (userDir.endsWith("ruoyi-admin")) {
+                projectRoot = new java.io.File(userDir).getParent();
             }
             
-            // 执行更新脚本
-            ProcessBuilder pb = new ProcessBuilder("cmd", "/c", updateScript.getAbsolutePath());
-            pb.directory(new java.io.File(projectRoot));
+            java.io.File updateScript = new java.io.File(projectRoot, "update.bat");
+            java.io.File projectDir = new java.io.File(projectRoot);
+            
+            // 详细的错误检查和日志
+            System.out.println("=== 更新脚本执行信息 ===");
+            System.out.println("用户目录: " + userDir);
+            System.out.println("项目根目录: " + projectRoot);
+            System.out.println("更新脚本路径: " + updateScript.getAbsolutePath());
+            System.out.println("脚本文件存在: " + updateScript.exists());
+            System.out.println("脚本文件可读: " + updateScript.canRead());
+            System.out.println("项目目录存在: " + projectDir.exists());
+            
+            if (!updateScript.exists()) {
+                return AjaxResult.error("更新脚本不存在：" + updateScript.getAbsolutePath() + "，请手动执行update.bat文件");
+            }
+            
+            if (!updateScript.canRead()) {
+                return AjaxResult.error("更新脚本无法读取，请检查文件权限，或手动执行update.bat文件");
+            }
+            
+            // 构建命令 - 使用绝对路径
+            ProcessBuilder pb = new ProcessBuilder();
+            pb.command("cmd", "/c", "\"" + updateScript.getAbsolutePath() + "\"");
+            pb.directory(projectDir);
             pb.redirectErrorStream(true);
+            
+            System.out.println("执行命令: " + pb.command());
+            System.out.println("工作目录: " + pb.directory().getAbsolutePath());
             
             Process process = pb.start();
             
-            // 异步执行，不等待完成
+            // 异步执行并记录输出
             new Thread(() -> {
-                try {
+                try (java.io.BufferedReader reader = new java.io.BufferedReader(
+                        new java.io.InputStreamReader(process.getInputStream(), "GBK"))) {
+                    
+                    String line;
+                    System.out.println("=== 更新脚本输出 ===");
+                    while ((line = reader.readLine()) != null) {
+                        System.out.println(line);
+                    }
+                    
                     int exitCode = process.waitFor();
-                    System.out.println("更新脚本执行完成，退出码：" + exitCode);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    System.err.println("更新脚本执行被中断");
+                    System.out.println("=== 更新脚本执行完成 ===");
+                    System.out.println("退出码: " + exitCode);
+                    
+                    if (exitCode == 0) {
+                        System.out.println("✅ 更新脚本执行成功");
+                    } else {
+                        System.err.println("❌ 更新脚本执行失败，退出码: " + exitCode);
+                    }
+                    
+                } catch (Exception e) {
+                    System.err.println("读取更新脚本输出时出错: " + e.getMessage());
+                    e.printStackTrace();
                 }
             }).start();
             
             return AjaxResult.success("更新命令已执行，系统正在后台更新...");
+            
         } catch (IOException e) {
+            String errorMsg = "更新失败：" + e.getMessage();
+            System.err.println(errorMsg);
             e.printStackTrace();
-            return AjaxResult.error("更新失败：" + e.getMessage() + "，请手动执行update.bat文件");
+            return AjaxResult.error(errorMsg + "，请手动执行update.bat文件");
+        } catch (Exception e) {
+            String errorMsg = "更新过程中发生未知错误：" + e.getMessage();
+            System.err.println(errorMsg);
+            e.printStackTrace();
+            return AjaxResult.error(errorMsg + "，请手动执行update.bat文件");
         }
     }
 }

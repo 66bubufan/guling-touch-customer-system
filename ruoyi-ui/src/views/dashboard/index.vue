@@ -260,14 +260,17 @@ export default {
         githubApiUrl: 'https://api.github.com/repos/66bubufan/guling-touch-customer-system/releases/latest', // GitHub API地址
         updateLog: [
           {
-            version: 'v1.3.0',
+            version: 'v1.2.5',
             date: '2025-07-14',
             changes: [
-              '✨ 新增了工作台数据可视化功能',
-              '🐛 修复了商家列表加载缓慢的问题', 
-              '⚡ 优化了系统性能，提升响应速度',
-              '🔒 加强了数据安全防护机制'
-            ]
+              '🚀 新增一键自动更新功能',
+              '� GitHub版本管理集成',
+              '🎛️ 智能更新检测系统',
+              '📋 详细更新日志展示',
+              '⚡ 优化系统性能',
+              '� 修复版本检测API问题'
+            ],
+            githubUrl: 'https://github.com/66bubufan/guling-touch-customer-system/releases/tag/v1.2.5'
           },
           {
             version: 'v1.2.3',
@@ -367,8 +370,8 @@ export default {
     setInterval(this.updateTime, 60000)
     // 模拟数据刷新
     this.refreshData()
-    // 随机设置更新状态用于演示
-    this.initUpdateStatus()
+    // 注释掉随机更新状态，使用固定的演示数据
+    // this.initUpdateStatus()
   },
   methods: {
     updateTime() {
@@ -394,16 +397,16 @@ export default {
       }, 2000)
     },
 
-    // 初始化更新状态
-    initUpdateStatus() {
-      // 随机设置是否有更新（30%概率有更新）
-      const hasUpdate = Math.random() < 0.3
-      this.systemVersion.hasUpdate = hasUpdate
-      
-      if (!hasUpdate) {
-        this.systemVersion.latestVersion = this.systemVersion.current
-      }
-    },
+    // 初始化更新状态 - 已禁用，使用固定演示数据
+    // initUpdateStatus() {
+    //   // 随机设置是否有更新（30%概率有更新）
+    //   const hasUpdate = Math.random() < 0.3
+    //   this.systemVersion.hasUpdate = hasUpdate
+    //   
+    //   if (!hasUpdate) {
+    //     this.systemVersion.latestVersion = this.systemVersion.current
+    //   }
+    // },
     
     // 处理快捷操作点击
     handleQuickAction(action) {
@@ -435,8 +438,8 @@ export default {
 
     // 检查系统更新
     checkUpdates() {
+      // 如果当前已有检测到的更新，直接显示详情
       if (this.systemVersion.hasUpdate) {
-        // 如果有更新，显示更新详情
         this.showUpdateDetails()
         return
       }
@@ -453,6 +456,10 @@ export default {
       
       // 如果正在检查中，避免重复检查
       if (this.systemVersion.checkingUpdate) {
+        this.$message({
+          message: '正在检查更新中，请稍候...',
+          type: 'info'
+        })
         return
       }
       
@@ -617,45 +624,121 @@ export default {
     // 执行自动更新
     async completeUpdate() {
       try {
-        this.$message({
-          message: '正在执行自动更新，请稍候...',
+        // 显示更新进度提示
+        const loadingMessage = this.$message({
+          message: '🚀 正在执行自动更新，请稍候...',
           type: 'info',
-          duration: 0
+          duration: 0,
+          showClose: false
         })
         
         // 调用后端API执行更新脚本
         const response = await fetch('/api/system/update', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
-          }
+            'Content-Type': 'application/json',
+            // 如果有token认证，添加认证头
+            'Authorization': localStorage.getItem('token') ? `Bearer ${localStorage.getItem('token')}` : ''
+          },
+          timeout: 60000 // 60秒超时
         })
         
+        loadingMessage.close()
+        
         if (response.ok) {
-          this.systemVersion.hasUpdate = false
-          this.systemVersion.current = this.systemVersion.latestVersion
-          this.systemVersion.buildDate = new Date().toISOString().split('T')[0]
-          this.systemVersion.lastCheckTime = null
+          const result = await response.json()
           
-          this.$message.closeAll()
-          this.$message({
-            message: '✅ 系统更新成功！即将刷新页面...',
-            type: 'success'
-          })
-          
-          // 3秒后刷新页面
-          setTimeout(() => {
-            window.location.reload()
-          }, 3000)
+          if (result.code === 200) {
+            // 更新成功
+            this.systemVersion.hasUpdate = false
+            this.systemVersion.current = this.systemVersion.latestVersion
+            this.systemVersion.buildDate = new Date().toISOString().split('T')[0]
+            this.systemVersion.lastCheckTime = null
+            
+            this.$notify({
+              title: '✅ 更新成功',
+              message: '系统正在后台更新，请等待构建完成后刷新页面查看效果',
+              type: 'success',
+              duration: 5000,
+              position: 'top-right'
+            })
+            
+            // 显示更新进度对话框
+            this.$confirm(
+              `<div style="text-align: left;">
+                <h4 style="color: #67C23A; margin-bottom: 16px;">🎉 更新命令执行成功！</h4>
+                <p>系统正在后台执行以下操作：</p>
+                <ul style="margin: 12px 0; padding-left: 20px;">
+                  <li>📥 拉取最新代码</li>
+                  <li>🔨 重新构建前端</li>
+                  <li>📦 准备生产环境文件</li>
+                </ul>
+                <p style="margin-top: 16px; color: #E6A23C;">
+                  ⏱️ 预计需要1-3分钟，请耐心等待...
+                </p>
+                <p style="margin-top: 12px; font-size: 12px; color: #909399;">
+                  💡 您可以继续使用系统，更新完成后建议刷新页面
+                </p>
+              </div>`,
+              '更新进度',
+              {
+                dangerouslyUseHTMLString: true,
+                confirmButtonText: '我知道了',
+                cancelButtonText: '手动刷新',
+                type: 'success',
+                callback: (action) => {
+                  if (action === 'cancel') {
+                    window.location.reload()
+                  }
+                }
+              }
+            )
+            
+          } else {
+            throw new Error(result.msg || '更新API返回错误')
+          }
         } else {
-          throw new Error('更新失败')
+          const errorText = await response.text()
+          throw new Error(`HTTP ${response.status}: ${errorText}`)
         }
+        
       } catch (error) {
+        console.error('更新失败:', error)
+        
         this.$message.closeAll()
-        this.$message({
-          message: '更新失败，请手动执行update.bat文件',
-          type: 'error'
-        })
+        
+        // 显示详细错误信息
+        this.$confirm(
+          `<div style="text-align: left;">
+            <h4 style="color: #F56C6C; margin-bottom: 16px;">❌ 自动更新失败</h4>
+            <p><strong>错误信息：</strong></p>
+            <p style="background: #f5f5f5; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 12px; margin: 8px 0;">
+              ${error.message}
+            </p>
+            <h5 style="margin: 16px 0 8px 0; color: #E6A23C;">🛠️ 解决方案：</h5>
+            <ol style="margin: 8px 0; padding-left: 20px; font-size: 14px;">
+              <li>请手动双击项目根目录的 <code>update.bat</code> 文件</li>
+              <li>或在命令行中执行：<code>git pull origin main</code></li>
+              <li>然后重新构建前端：<code>cd ruoyi-ui && npm run build:prod</code></li>
+            </ol>
+            <p style="margin-top: 16px; font-size: 12px; color: #909399;">
+              💡 如果问题持续，请联系技术支持
+            </p>
+          </div>`,
+          '更新失败',
+          {
+            dangerouslyUseHTMLString: true,
+            confirmButtonText: '我知道了',
+            cancelButtonText: '查看日志',
+            type: 'error',
+            callback: (action) => {
+              if (action === 'cancel') {
+                console.log('更新详细错误:', error)
+                this.$message.info('错误详情已输出到浏览器控制台')
+              }
+            }
+          }
+        )
       }
     },
 
