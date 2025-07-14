@@ -1,0 +1,47 @@
+--- # 测试环境配置
+spring:
+  profiles:
+    active: test
+  # Redis配置 - 测试环境禁用
+  redis:
+    enabled: false
+  # 禁用Redis自动配置
+  autoconfigure:
+    exclude:
+      - org.redisson.spring.starter.RedissonAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - com.baomidou.lock.spring.boot.autoconfigure.LockAutoConfiguration
+      - com.baomidou.lock.spring.boot.autoconfigure.RedissonLockAutoConfiguration
+
+--- # 数据源配置
+spring:
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    # 动态数据源文档 https://www.kancloud.cn/tracy5546/dynamic-datasource/content
+    dynamic:
+      # 性能分析插件(有性能损耗 不建议生产环境使用)
+      p6spy: false
+      # 设置默认的数据源或者数据源组,默认值即为 master
+      primary: master
+      # 严格模式 匹配不到数据源则报错
+      strict: true
+      datasource:
+        # 主库数据源
+        master:
+          type: ${spring.datasource.type}
+          driverClassName: com.mysql.cj.jdbc.Driver
+          url: jdbc:mysql://localhost:3306/ry-vue?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&autoReconnect=true&rewriteBatchedStatements=true&nullCatalogMeansCurrent=true
+          username: root
+          password: 123456
+
+--- # 分布式锁 lock4j 配置 - 测试环境禁用
+lock4j:
+  enabled: false
+
+--- # 邮件配置 - 测试环境禁用
+mail:
+  enabled: false
+
+--- # 短信配置 - 测试环境禁用
+sms:
+  enabled: false 

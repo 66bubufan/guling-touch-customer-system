@@ -1,0 +1,63 @@
+/* 登录页面样式 */
+.login {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  background-size: cover;
+
+  .title {
+    margin: 0px auto 30px auto;
+    text-align: center;
+    h2 {
+      margin: 0;
+      padding: 0;
+      font-size: 24px;
+      color: #303133;
+    }
+  }
+
+  .login-form {
+    border-radius: 6px;
+    background: #ffffff;
+    width: 400px;
+    padding: 25px 25px 5px 25px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+    .el-input {
+      height: 38px;
+      input {
+        height: 38px;
+        padding-left: 36px;
+      }
+    }
+    .input-icon {
+      height: 38px;
+      width: 14px;
+      margin-left: 10px;
+      color: #889aa4;
+    }
+  }
+
+  .login-code {
+    width: 33%;
+    height: 38px;
+    float: right;
+    img {
+      cursor: pointer;
+      vertical-align: middle;
+      border-radius: 4px;
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  .el-login-footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    padding: 20px;
+    text-align: center;
+    color: #ffffff;
+  }
+}
