@@ -249,11 +249,11 @@ export default {
       currentTime: '',
       // 系统版本信息
       systemVersion: {
-        current: 'v1.2.3',
+        current: 'v1.2.4', // 用户当前版本
         buildDate: '2025-07-14',
         createDate: '2024-09-01',
-        hasUpdate: false, // 默认设置为没有更新，展示绿色按钮效果
-        latestVersion: 'v1.2.3',
+        hasUpdate: true, // 设置为有更新可用
+        latestVersion: 'v1.2.5', // 最新版本
         lastCheckTime: null, // 上次检查时间
         checkingUpdate: false, // 是否正在检查更新
         githubRepo: '66bubufan/guling-touch-customer-system', // GitHub仓库地址
