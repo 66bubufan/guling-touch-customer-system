@@ -614,17 +614,49 @@ export default {
       }
     },
 
-    // 模拟版本更新完成
-    completeUpdate() {
-      this.systemVersion.hasUpdate = false
-      this.systemVersion.current = this.systemVersion.latestVersion
-      this.systemVersion.buildDate = new Date().toISOString().split('T')[0]
-      this.systemVersion.lastCheckTime = null // 重置检查时间
-      
-      this.$message({
-        message: '版本更新完成！',
-        type: 'success'
-      })
+    // 执行自动更新
+    async completeUpdate() {
+      try {
+        this.$message({
+          message: '正在执行自动更新，请稍候...',
+          type: 'info',
+          duration: 0
+        })
+        
+        // 调用后端API执行更新脚本
+        const response = await fetch('/api/system/update', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        
+        if (response.ok) {
+          this.systemVersion.hasUpdate = false
+          this.systemVersion.current = this.systemVersion.latestVersion
+          this.systemVersion.buildDate = new Date().toISOString().split('T')[0]
+          this.systemVersion.lastCheckTime = null
+          
+          this.$message.closeAll()
+          this.$message({
+            message: '✅ 系统更新成功！即将刷新页面...',
+            type: 'success'
+          })
+          
+          // 3秒后刷新页面
+          setTimeout(() => {
+            window.location.reload()
+          }, 3000)
+        } else {
+          throw new Error('更新失败')
+        }
+      } catch (error) {
+        this.$message.closeAll()
+        this.$message({
+          message: '更新失败，请手动执行update.bat文件',
+          type: 'error'
+        })
+      }
     },
 
     // 显示更新详情
