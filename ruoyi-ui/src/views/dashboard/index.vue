@@ -256,8 +256,8 @@ export default {
         latestVersion: 'v1.2.3',
         lastCheckTime: null, // 上次检查时间
         checkingUpdate: false, // 是否正在检查更新
-        githubRepo: 'your-username/ry-vue-flowable-xg', // GitHub仓库地址，请替换为您的实际仓库
-        githubApiUrl: 'https://api.github.com/repos/your-username/ry-vue-flowable-xg/releases/latest', // GitHub API地址
+        githubRepo: '66bubufan/guling-touch-customer-system', // GitHub仓库地址
+        githubApiUrl: 'https://api.github.com/repos/66bubufan/guling-touch-customer-system/releases/latest', // GitHub API地址
         updateLog: [
           {
             version: 'v1.3.0',
